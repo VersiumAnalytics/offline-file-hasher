@@ -1,0 +1,1259 @@
+<head>
+	<title>Versium File Hasher</title>
+	<style>
+		:root {
+			--accent-color: #f35f5f;
+			--text-dark: #333333;
+			--text-light: #808080;
+		}
+
+		body {
+			accent-color: var(--accent-color);
+			background: #f9fafa;
+			border: 0px;
+			font-family: Montserrat, sans-serif;
+			margin: 0px;
+			padding: 0px;
+			text-align: center;
+		}
+		input[type="file"] {
+			display: none;
+		}
+
+		.accent {
+			color: var(--accent-color);
+			text-decoration: underline;
+		}
+		.center-left {
+			display: inline-block;
+			text-align: left;
+		}
+		.clickable:hover {
+			cursor: pointer;
+		}
+		.content-container {
+			border-bottom-left-radius: 32px;
+			border-bottom-right-radius: 32px;
+			color: var(--text-light);
+			font-size: 16px;
+			opacity: 1;
+			overflow-y: hidden;
+			padding: 24px 15%;
+			transition: opacity 0.25s;
+		}
+		.content-container-button {
+			background: var(--accent-color);
+			border-radius: 16px;
+			color: #ffffff;
+			display: inline-block;
+			padding: 16px 64px;
+			transition: background 0.25s;
+		}
+		.content-container-button:hover {
+			cursor: pointer;
+		}
+		.content-container-button.disabled {
+			background: var(--text-light) !important;
+		}
+		.content-container-button.disabled:hover {
+			cursor: not-allowed;
+		}
+		.content-container-title {
+			color: var(--text-dark);
+			font-size: 24px;
+			font-weight: bold;
+		}
+		.icon-right-arrow {
+			border: solid #ffffff;
+			border-width: 0 2px 2px 0;
+			display: inline-block;
+			margin-left: 4px;
+			padding: 4px;
+			position: relative;
+			transform: rotate(315deg);
+		}
+		.main-container {
+			background: #ffffff;
+			border-radius: 32px;
+			margin-left: 50%;
+			margin-top: 64px;
+			padding: 24px;
+			transform: translateX(-50%);
+			width: 50%;
+		}
+		.main-container img {
+			height: 24px;
+		}
+		.title-container {
+			color: var(--text-dark);
+			font-size: 48px;
+			font-weight: bold;
+			padding: 24px;
+		}
+		.two-column-left {
+			display: inline-block;
+			text-align: right;
+			width: 50%;
+		}
+		.two-column-right {
+			display: inline-block;
+			text-align: left;
+			width: 50%;
+		}
+		.spacer {
+			padding-top: 8px;
+		}
+		.spacer-dash {
+			border-top: 8px solid var(--text-dark);
+			margin: auto;
+			width: 32px;
+		}
+	</style>
+</head>
+<body>
+	<div class="main-container">
+		<div class="title-container">
+			<img src="data:image/svg+xml;base64, PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2OTEuNzQiIGhlaWdodD0iMTI5LjUxIiB2aWV3Qm94PSIwIDAgNjkxLjc0IDEyOS41MSI+PGRlZnM+PHN0eWxlPi5he2ZpbGw6I2YzNWY1Zjt9LmJ7ZmlsbDojZmY3ZDdkO30uY3tmaWxsOiNmZmI2OGU7fS5ke2ZpbGw6IzMzMzt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImEiIGQ9Ik05NywxMTEuMTNhMTIuNDIsMTIuNDIsMCwwLDEtMS45My0uMSwyMS42OSwyMS42OSwwLDAsMS0zMC4zNC00LjU2LDIwLjMxLDIwLjMxLDAsMCwxLTEuMzItMkwyNi4yNyw0MC4xOWExNi44MiwxNi44MiwwLDAsMSwwLTE3LjI3LDE2LjYzLDE2LjYzLDAsMCwxLDEzLjMyLTguNWwuMjktLjU4Yy4zOS0uNjcuODctMS4zNSwxLjM1LTJBMzAuODMsMzAuODMsMCwwLDEsNTEsMi41NUg0MS4yM0EyOS4wNiwyOS4wNiwwLDAsMCwxNiwxN2EyOC42NiwyOC42NiwwLDAsMCwwLDI5LjE1TDUzLjIsMTEwLjQ1YTMzLjUyLDMzLjUyLDAsMCwwLDU4LjEsMGwxLjkzLTMuNDdhMzMuNTgsMzMuNTgsMCwwLDEtMTMuMTIsNEM5OC45MywxMTEsOTgsMTExLjEzLDk3LDExMS4xM1oiLz48cGF0aCBjbGFzcz0iYiIgZD0iTTExMy45MSw4Ni43MWgtLjM5Yy0uNzcsMC0xLjU0LS4xLTIuMzEtLjFBMjgsMjgsMCwwLDEsMTA5LjQ3LDg5YTUuNTEsNS41MSwwLDAsMS0uNjguNzdjLS4zOC4zOS0uODcuNzctMS4yNSwxLjE2YTExLjY0LDExLjY0LDAsMCwxLTEuMjYsMSwxMS44MSwxMS44MSwwLDAsMS0yLjUzLDEuMzUsMTMuNjYsMTMuNjYsMCwwLDEtMS4zNS41OCwxMC44MiwxMC44MiwwLDAsMS0zLjE4LjY4LDE4LjMzLDE4LjMzLDAsMCwxLTIuMjIuMSwxNiwxNiwwLDAsMS02LjM3LTEuMjYsMTYuMjYsMTYuMjYsMCwwLDEtNy45Mi03TDU0LjI0LDM3LjJhNC4xLDQuMSwwLDAsMS0uNDgtLjg3LDEzLjkxLDEzLjkxLDAsMCwxLTEuMDYtMi44LDEzLjIzLDEzLjIzLDAsMCwxLS40OC0zLjg2QTEzLjM4LDEzLjM4LDAsMCwxLDUzLDI0Ljg1YTEwLDEwLDAsMCwxLDEuMjUtMi43MSwxNC44NiwxNC44NiwwLDAsMSw4LjIxLTYuNzUsMTUuMTcsMTUuMTcsMCwwLDEsMi44OS0uNjgsMy41MSwzLjUxLDAsMCwxLDEtLjA5Yy4zOCwwLC42Ny0uMSwxLS4xaDIuOUE3Ljg4LDcuODgsMCwwLDEsNzEsMTNhNS41MSw1LjUxLDAsMCwxLC4zOC0uNjdsLjEtLjE5LjEtLjEuMDktLjE5QTMwLjY0LDMwLjY0LDAsMCwxLDgxLDIuNDVINjcuMmEzMSwzMSwwLDAsMC02LjY2Ljc4Yy0uNTguMDktMS4wNy4yOS0xLjY0LjM4YTE2Ljc3LDE2Ljc3LDAsMCwwLTMsMS4xNmMtLjQ4LjE5LTEsLjQ4LTEuNDQuNjhBMzAuMTQsMzAuMTQsMCwwLDAsNTEsNy42N2wtMS4xNi44NmEzMC4yLDMwLjIsMCwwLDAtNSw1LjUxbC0xLjE1LDEuNzNhMjUuMDgsMjUuMDgsMCwwLDAtMi43MSw2LjY2LDIyLjc1LDIyLjc1LDAsMCwwLS42NywzLjQ4LDI3Ljg3LDI3Ljg3LDAsMCwwLDAsN2MuMDkuNTguMTksMS4xNS4zLDEuNzMuMTgsMS4xNi41NywyLjMyLjg3LDMuNDhhMzIuMjgsMzIuMjgsMCwwLDAsMS4zNSwzLjI4Yy4yOS41OC41OCwxLjA2Ljg3LDEuNjRMNzIuMTMsOTIuMjFBMjguNiwyOC42LDAsMCwwLDg3LjU3LDEwNWwxLjc0LjU4YTIyLjg5LDIyLjg5LDAsMCwwLDMuNjYuNjhjMS4yNi4wOSwyLjUxLjE5LDMuNzcuMTkuODcsMCwxLjgzLS4xLDIuNy0uMWEyOC4wNywyOC4wNywwLDAsMCwyMS45MS0xNC4wOWw1LTguNzhBMjYuNjIsMjYuNjIsMCwwLDEsMTEzLjkxLDg2LjcxWiIvPjxwYXRoIGNsYXNzPSJiIiBkPSJNNDUsMTQuMjNjLS4zOS41OC0uNzgsMS4xNi0xLjE1LDEuNzRDNDQuMjYsMTUuNDEsNDQuNjQsMTQuODMsNDUsMTQuMjNaIi8+PHBhdGggY2xhc3M9ImIiIGQ9Ik01Mi40MywzMS40MWExMy44NywxMy44NywwLDAsMS0uMS0xLjkzQTYuNiw2LjYsMCwwLDAsNTIuNDMsMzEuNDFaIi8+PHBhdGggY2xhc3M9ImIiIGQ9Ik0xMDguNTgsODkuOGMtLjM5LjM5LS44Ny43Ny0xLjI1LDEuMTZBNy42NSw3LjY1LDAsMCwwLDEwOC41OCw4OS44WiIvPjxwYXRoIGNsYXNzPSJiIiBkPSJNNTMuNzgsMzYuMTRhMTMuOTEsMTMuOTEsMCwwLDEtMS4wNi0yLjhBMjMuNjYsMjMuNjYsMCwwLDAsNTMuNzgsMzYuMTRaIi8+PHBhdGggY2xhc3M9ImIiIGQ9Ik01Mi44MSwzMy40NGExNi4wNSwxNi4wNSwwLDAsMS0uMzgtMS45M0E3LjU5LDcuNTksMCwwLDAsNTIuODEsMzMuNDRaIi8+PHBhdGggY2xhc3M9ImIiIGQ9Ik0xMDYuMTksOTEuODNhMTMuNSwxMy41LDAsMCwxLTIuNTEsMS4zNUE5LjIyLDkuMjIsMCwwLDAsMTA2LjE5LDkxLjgzWiIvPjxwYXRoIGNsYXNzPSJiIiBkPSJNODIuNzMsODYuMzMsNTQuMjYsMzcuMSw4Mi43Myw4Ni4zM2ExNi4zNCwxNi4zNCwwLDAsMCw3LjkyLDYuOTRBMTYuNjIsMTYuNjIsMCwwLDEsODIuNzMsODYuMzNaIi8+PHBhdGggY2xhc3M9ImIiIGQ9Ik02Ny4zOSwxNC40MmEyLjg5LDIuODksMCwwLDAtMSwuMUEyLjg5LDIuODksMCwwLDEsNjcuMzksMTQuNDJaIi8+PHBhdGggY2xhc3M9ImIiIGQ9Ik02Mi40NywxNS4xOWExNiwxNiwwLDAsMSwyLjg5LS42N0ExNiwxNiwwLDAsMCw2Mi40NywxNS4xOVoiLz48cGF0aCBjbGFzcz0iYiIgZD0iTTUxLjE3LDcuNzZhMTkuNzUsMTkuNzUsMCwwLDEsMy40OC0yLjIyQzUzLjQ5LDYuMjIsNTIuMzMsNyw1MS4xNyw3Ljc2WiIvPjxwYXRoIGNsYXNzPSJiIiBkPSJNNTAuMTEsOC42M2EzMC40OCwzMC40OCwwLDAsMC01LDUuNWgwQTI3LDI3LDAsMCwxLDUwLjExLDguNjNaIi8+PHBhdGggY2xhc3M9ImMiIGQ9Ik0xNTMuMDksMjguOWExLjI4LDEuMjgsMCwwLDAtLjExLS41OCw2LjgyLDYuODIsMCwwLDEtLjEtMS4zNS4zNS4zNSwwLDAsMC0uMS0uMjksMjYuMzYsMjYuMzYsMCwwLDAtMy4zNy05Ljk0LjExLjExLDAsMCwwLS4xLS4xaDBhMjQuMzYsMjQuMzYsMCwwLDAtMy4xOS00LjQ0bC0uMTktLjE5Yy0uMS0uMTktLjI5LS4yOS0uMzgtLjQ4YTI1LjQxLDI1LjQxLDAsMCwwLTcuNDQtNS43OSwzMC44MSwzMC44MSwwLDAsMC0xMC4yOS0zLjE5LDM2LjMsMzYuMywwLDAsMC00LjU0LS4yOUg5N2ExMy43OSwxMy43OSwwLDAsMC0xLjkzLjEsMy43LDMuNywwLDAsMC0uNDguMDloLS4yYTI1LjEsMjUuMSwwLDAsMC0xOSwxMS43OC4zLjMsMCwwLDAtLjEuMTljLS4wOS4yLS4yOS40OC0uMzguNjgtLjI5LjU4LS41OCwxLjA2LS44NywxLjU0YTIxLjkyLDIxLjkyLDAsMCwwLTEsMi4yMmwtLjI5Ljg3YTExLjQ0LDExLjQ0LDAsMCwwLS40OCwxLjY0LDE0LDE0LDAsMCwwLS4zOCwxLjkzLDI1LjY2LDI1LjY2LDAsMCwwLC4zOCwxMS4yLDExLjgzLDExLjgzLDAsMCwwLC40OCwxLjY0LDI5LjUxLDI5LjUxLDAsMCwwLDIuMTMsNC43M0w5MS41LDY5LjYzYTI0Ljc5LDI0Ljc5LDAsMCwwLDE3LjA4LDEyLjE2Yy43Ny4xOSwxLjY0LjE5LDIuNDEuMzlhMTgsMTgsMCwwLDAsMi4zMi4wOWguMzlhMjQuNDcsMjQuNDcsMCwwLDAsMTguNzItOC44OC4wOS4wOSwwLDAsMSwuMS0uMDlsLjA5LS4xYy4xLS4xLjEtLjEuMS0uMTlhMjIuNDgsMjIuNDgsMCwwLDAsMi40MS0zLjQ4bDEzLjQyLTIzLjM1YTMxLjQ2LDMxLjQ2LDAsMCwwLDQuMjQtMTMuOXYtLjJhNi45Myw2LjkzLDAsMCwwLC4xLTEuNDR2LS41OEEyLjExLDIuMTEsMCwwLDAsMTUzLjA5LDI4LjlaTTEzOC4zMyw0MC4xOSwxMjQuOTEsNjMuNTVhMTMuMjIsMTMuMjIsMCwwLDEtMTEuMzksNi41NiwxMywxMywwLDAsMS0xMS4zOS02LjU2TDg1LjUzLDM0Ljc5YTEzLjcxLDEzLjcxLDAsMCwxLDAtMTMuNjEsMTMuNDQsMTMuNDQsMCwwLDEsMTAuODEtNi43NmMuMjksMCwuNTgtLjA5LDEtLjA5aDI2LjE1YTE2LjkzLDE2LjkzLDAsMCwxLDE0Ljg3LDguNTljMy4wNyw1LjQsMi44LDEzLjIyLDAsMTcuMjdaIi8+PHBhdGggY2xhc3M9ImQiIGQ9Ik0xOTYuMjQsMTA0LjE4LDE3OC40OSw1Ny41NmE4Ljg3LDguODcsMCwwLDEsNS4xLTExLjQ3LDguNzgsOC43OCwwLDAsMSwzLjE3LS41OWguNzdBOC45Miw4LjkyLDAsMCwxLDE5Niw1MS42OGwxNC4wOSw0My40MywxNC00My40M2E4LjkyLDguOTIsMCwwLDEsOC40OS02LjE4aDBhOC44Myw4LjgzLDAsMCwxLDguMywxMi4wNmwtMTcuNjYsNDYuNzJhMTQuNDcsMTQuNDcsMCwwLDEtMTMuNTEsOS4zNmgwQTE0Ljc4LDE0Ljc4LDAsMCwxLDE5Ni4yNCwxMDQuMThaIi8+PHBhdGggY2xhc3M9ImQiIGQ9Ik0zMDMuNjYsODUuMzZoLTM4QzI2OCw5NCwyNzQuNTIsOTkuMDcsMjgzLjIsOTkuMDdhMjMuOTEsMjMuOTEsMCwwLDAsMTIuNzQtMy42Nyw3LjMzLDcuMzMsMCwwLDEsOS4xNywxLjE2aDBBNy41Miw3LjUyLDAsMCwxLDMwNCwxMDhhNDAuMzUsNDAuMzUsMCwwLDEtMjIuMjksNi4xOGMtMjEuODEsMC0zNS42MS0xMy45LTM1LjYxLTM0LjU1LDAtMjEsMTQuMjgtMzQuOTQsMzUtMzQuOTQsMTkuNzksMCwzMC44OCwxMC44MSwzMy4xLDI4LjY2QTEwLjYsMTAuNiwwLDAsMSwzMDUsODUuMjcsMTAuMiwxMC4yLDAsMCwxLDMwMy42Niw4NS4zNlptLTcuNDMtMTEuNDljLS4yOS05LTYuMDgtMTQuNzYtMTUuMDUtMTQuNzYtOC41OSwwLTE0LjQ4LDUuNzktMTUuOTMsMTQuNzZaIi8+PHBhdGggY2xhc3M9ImQiIGQ9Ik0zNDYuOSw1Ny42NmEyNC44MiwyNC44MiwwLDAsMSwxMS40OS0xMC44MWM1LjIxLTIuMzIsMTEsMS43NCwxMSw3LjQzdjFhOC4xLDguMSwwLDAsMS03LjE0LDcuOTFjLTkuNjUsMS40NS0xNS40NCw4LjIxLTE1LjQ0LDE3LjU3djIzLjA2YTkuNzIsOS43MiwwLDAsMS05LjY5LDkuNzVoLS4wNmE5LjcyLDkuNzIsMCwwLDEtOS43NS05LjY5VjU1LjE1QTkuNzIsOS43MiwwLDAsMSwzMzcsNDUuNGguMDZhOS43Myw5LjczLDAsMCwxLDkuNzUsOS42OXYuMDZaIi8+PHBhdGggY2xhc3M9ImQiIGQ9Ik00MjYuMzMsNTguNjNsLS4xOS4yOWE3LjQ0LDcuNDQsMCwwLDEtOS40NiwzLjQ3LDM4LDM4LDAsMCwwLTE0LjU3LTMuNTdjLTQuNTQsMC03LjgyLDEuNTQtNy44Miw1LDAsMTAuMjMsMzYsNSwzNS44MSwyOS4xNCwwLDEzLjktMTIuMjYsMjEuMjQtMjcuNywyMS4yNGE1MCw1MCwwLDAsMS0yMy40NS01LjYsNy40MSw3LjQxLDAsMCwxLTMuMTktOS43NWgwYTcuMzUsNy4zNSwwLDAsMSw5LjgtMy40NWwuMTQuMDdBMzkuMTMsMzkuMTMsMCwwLDAsNDAzLDk5LjkzYzQuOTIsMCw4LjU5LTEuNjQsOC41OS01LjMsMC0xMC45MS0zNS4zMy01LTM1LjMzLTI5LDAtMTQuMDksMTIuMDctMjEuMjMsMjYuODMtMjEuMjNhNTIuMTMsNTIuMTMsMCwwLDEsMTkuNiw0LDcuNDYsNy40NiwwLDAsMSwzLjg2LDkuODFDNDI2LjQ3LDU4LjM1LDQyNi40LDU4LjQ5LDQyNi4zMyw1OC42M1oiLz48ZWxsaXBzZSBjbGFzcz0iYiIgY3g9IjQ1Mi45NyIgY3k9IjI2IiByeD0iMTAuNTIiIHJ5PSIxMC45MSIvPjxwYXRoIGNsYXNzPSJkIiBkPSJNNDQzLjIyLDEwMy43OVY1NS4xNWE5LjczLDkuNzMsMCwwLDEsOS42OS05Ljc1SDQ1M2E5LjcyLDkuNzIsMCwwLDEsOS43NCw5Ljd2NDguNjlhOS43MSw5LjcxLDAsMCwxLTkuNjksOS43NWgwQTkuNzksOS43OSwwLDAsMSw0NDMuMjIsMTAzLjc5WiIvPjxwYXRoIGNsYXNzPSJkIiBkPSJNNTM2LjQ2LDExMy41NGgwYTkuNjUsOS42NSwwLDAsMS05LjY1LTkuNjV2LTIuMzJjLTQuNzQsOC41OS0xMi41NSwxMi43NC0yMi43OCwxMi43NC0xNS4wNiwwLTI0LjUyLTEwLTI0LjUyLTI2VjU1LjE1YTkuNjUsOS42NSwwLDAsMSw5LjY1LTkuNjVoLjA5YTkuNjUsOS42NSwwLDAsMSw5LjY1LDkuNjVWODIuNjZjMCw4LjU5LDQuOTMsMTMuOCwxMi43NCwxMy44QzUyMSw5Ni4zNiw1MjYuNyw4OSw1MjYuNyw3OS4wOXYtMjRhOS42NSw5LjY1LDAsMCwxLDkuNjUtOS42NWgwQTkuNjUsOS42NSwwLDAsMSw1NDYsNTUuMDV2NDguNzRhOS41NSw5LjU1LDAsMCwxLTkuMzQsOS43NVoiLz48cGF0aCBjbGFzcz0iZCIgZD0iTTY3OS42OCw3MC42OXYzMy4xYTkuNjYsOS42NiwwLDAsMS05LjY1LDkuNjZoMGE5LjY2LDkuNjYsMCwwLDEtOS42NS05LjY2Vjc2LjM4YzAtOC43OC01LTEzLjg5LTEzLjEzLTEzLjg5LTkuMzYuMDktMTUsNy40My0xNSwxNy4zN3YyNGE5LjY1LDkuNjUsMCwwLDEtOS42NSw5LjY1aDBhOS42NSw5LjY1LDAsMCwxLTkuNjUtOS42NVY3Ni40OGMwLTguNzgtNS0xMy45LTEzLTEzLjktOS40Ni4xLTE1LjE2LDcuNDMtMTUuMTYsMTcuMzh2MjRhOS42NSw5LjY1LDAsMCwxLTkuNjUsOS42NUg1NzVhOS42Niw5LjY2LDAsMCwxLTkuNjYtOS42NVY1NS4zNEE5LjcyLDkuNzIsMCwwLDEsNTc1LDQ1LjZoLjA2YTkuNzIsOS43MiwwLDAsMSw5Ljc0LDkuN3YyLjA3YzQuODMtOC40LDEyLjc0LTEyLjQ1LDIzLjA4LTEyLjU1LDExLjQ4LDAsMTkuNzgsNS43OSwyMy4wNiwxNS43NEM2MzUuMzgsNTAsNjQ0LDQ1LDY1NS40Niw0NC44Miw2NzAuMTMsNDQuNjMsNjc5LjY4LDU0Ljc3LDY3OS42OCw3MC42OVoiLz48L3N2Zz4=" alt="Versium Logo" />
+			<div class="spacer"></div>
+			File Hasher
+		</div>
+		<div class="spacer-dash"></div>
+		<div class="content-container" id="content-container">
+
+		</div>
+	</div>
+	<input type="file" id="file-input">
+	<script>
+		/*
+		 * http://www.myersdaily.org/joseph/javascript/md5-text.html
+		 */
+		(function (global) {
+
+		  var md5cycle = function (x, k) {
+			var a = x[0],
+			  b = x[1],
+			  c = x[2],
+			  d = x[3];
+
+			a = ff(a, b, c, d, k[0], 7, -680876936);
+			d = ff(d, a, b, c, k[1], 12, -389564586);
+			c = ff(c, d, a, b, k[2], 17, 606105819);
+			b = ff(b, c, d, a, k[3], 22, -1044525330);
+			a = ff(a, b, c, d, k[4], 7, -176418897);
+			d = ff(d, a, b, c, k[5], 12, 1200080426);
+			c = ff(c, d, a, b, k[6], 17, -1473231341);
+			b = ff(b, c, d, a, k[7], 22, -45705983);
+			a = ff(a, b, c, d, k[8], 7, 1770035416);
+			d = ff(d, a, b, c, k[9], 12, -1958414417);
+			c = ff(c, d, a, b, k[10], 17, -42063);
+			b = ff(b, c, d, a, k[11], 22, -1990404162);
+			a = ff(a, b, c, d, k[12], 7, 1804603682);
+			d = ff(d, a, b, c, k[13], 12, -40341101);
+			c = ff(c, d, a, b, k[14], 17, -1502002290);
+			b = ff(b, c, d, a, k[15], 22, 1236535329);
+
+			a = gg(a, b, c, d, k[1], 5, -165796510);
+			d = gg(d, a, b, c, k[6], 9, -1069501632);
+			c = gg(c, d, a, b, k[11], 14, 643717713);
+			b = gg(b, c, d, a, k[0], 20, -373897302);
+			a = gg(a, b, c, d, k[5], 5, -701558691);
+			d = gg(d, a, b, c, k[10], 9, 38016083);
+			c = gg(c, d, a, b, k[15], 14, -660478335);
+			b = gg(b, c, d, a, k[4], 20, -405537848);
+			a = gg(a, b, c, d, k[9], 5, 568446438);
+			d = gg(d, a, b, c, k[14], 9, -1019803690);
+			c = gg(c, d, a, b, k[3], 14, -187363961);
+			b = gg(b, c, d, a, k[8], 20, 1163531501);
+			a = gg(a, b, c, d, k[13], 5, -1444681467);
+			d = gg(d, a, b, c, k[2], 9, -51403784);
+			c = gg(c, d, a, b, k[7], 14, 1735328473);
+			b = gg(b, c, d, a, k[12], 20, -1926607734);
+
+			a = hh(a, b, c, d, k[5], 4, -378558);
+			d = hh(d, a, b, c, k[8], 11, -2022574463);
+			c = hh(c, d, a, b, k[11], 16, 1839030562);
+			b = hh(b, c, d, a, k[14], 23, -35309556);
+			a = hh(a, b, c, d, k[1], 4, -1530992060);
+			d = hh(d, a, b, c, k[4], 11, 1272893353);
+			c = hh(c, d, a, b, k[7], 16, -155497632);
+			b = hh(b, c, d, a, k[10], 23, -1094730640);
+			a = hh(a, b, c, d, k[13], 4, 681279174);
+			d = hh(d, a, b, c, k[0], 11, -358537222);
+			c = hh(c, d, a, b, k[3], 16, -722521979);
+			b = hh(b, c, d, a, k[6], 23, 76029189);
+			a = hh(a, b, c, d, k[9], 4, -640364487);
+			d = hh(d, a, b, c, k[12], 11, -421815835);
+			c = hh(c, d, a, b, k[15], 16, 530742520);
+			b = hh(b, c, d, a, k[2], 23, -995338651);
+
+			a = ii(a, b, c, d, k[0], 6, -198630844);
+			d = ii(d, a, b, c, k[7], 10, 1126891415);
+			c = ii(c, d, a, b, k[14], 15, -1416354905);
+			b = ii(b, c, d, a, k[5], 21, -57434055);
+			a = ii(a, b, c, d, k[12], 6, 1700485571);
+			d = ii(d, a, b, c, k[3], 10, -1894986606);
+			c = ii(c, d, a, b, k[10], 15, -1051523);
+			b = ii(b, c, d, a, k[1], 21, -2054922799);
+			a = ii(a, b, c, d, k[8], 6, 1873313359);
+			d = ii(d, a, b, c, k[15], 10, -30611744);
+			c = ii(c, d, a, b, k[6], 15, -1560198380);
+			b = ii(b, c, d, a, k[13], 21, 1309151649);
+			a = ii(a, b, c, d, k[4], 6, -145523070);
+			d = ii(d, a, b, c, k[11], 10, -1120210379);
+			c = ii(c, d, a, b, k[2], 15, 718787259);
+			b = ii(b, c, d, a, k[9], 21, -343485551);
+
+			x[0] = add32(a, x[0]);
+			x[1] = add32(b, x[1]);
+			x[2] = add32(c, x[2]);
+			x[3] = add32(d, x[3]);
+
+		  }
+
+		  var cmn = function (q, a, b, x, s, t) {
+			a = add32(add32(a, q), add32(x, t));
+			return add32((a << s) | (a >>> (32 - s)), b);
+		  }
+
+		  var ff = function (a, b, c, d, x, s, t) {
+			return cmn((b & c) | ((~b) & d), a, b, x, s, t);
+		  }
+
+		  var gg = function (a, b, c, d, x, s, t) {
+			return cmn((b & d) | (c & (~d)), a, b, x, s, t);
+		  }
+
+		  var hh = function (a, b, c, d, x, s, t) {
+			return cmn(b ^ c ^ d, a, b, x, s, t);
+		  }
+
+		  var ii = function (a, b, c, d, x, s, t) {
+			return cmn(c ^ (b | (~d)), a, b, x, s, t);
+		  }
+
+		  var md51 = function (s) {
+			var txt = '',
+			  n = s.length,
+			  state = [1732584193, -271733879, -1732584194, 271733878],
+			  i;
+			for (i = 64; i <= s.length; i += 64) {
+			  md5cycle(state, md5blk(s.substring(i - 64, i)));
+			}
+			s = s.substring(i - 64);
+			var tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+			for (i = 0; i < s.length; i++)
+			  tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+			tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+			if (i > 55) {
+			  md5cycle(state, tail);
+			  for (i = 0; i < 16; i++) tail[i] = 0;
+			}
+			tail[14] = n * 8;
+			md5cycle(state, tail);
+			return state;
+		  }
+
+		  /* there needs to be support for Unicode here,
+		   * unless we pretend that we can redefine the MD-5
+		   * algorithm for multi-byte characters (perhaps
+		   * by adding every four 16-bit characters and
+		   * shortening the sum to 32 bits). Otherwise
+		   * I suggest performing MD-5 as if every character
+		   * was two bytes--e.g., 0040 0025 = @%--but then
+		   * how will an ordinary MD-5 sum be matched?
+		   * There is no way to standardize text to something
+		   * like UTF-8 before transformation; speed cost is
+		   * utterly prohibitive. The JavaScript standard
+		   * itself needs to look at this: it should start
+		   * providing access to strings as preformed UTF-8
+		   * 8-bit unsigned value arrays.
+		   */
+		  var md5blk = function (s) { /* I figured global was faster.   */
+			var md5blks = [],
+			  i; /* Andy King said do it this way. */
+			for (i = 0; i < 64; i += 4) {
+			  md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+			}
+			return md5blks;
+		  }
+
+		  var hex_chr = '0123456789abcdef'.split('');
+
+		  var rhex = function (n) {
+			var s = '',
+			  j = 0;
+			for (; j < 4; j++)
+			  s += hex_chr[(n >> (j * 8 + 4)) & 0x0F] + hex_chr[(n >> (j * 8)) & 0x0F];
+			return s;
+		  }
+
+		  var hex = function (x) {
+			for (var i = 0; i < x.length; i++)
+			  x[i] = rhex(x[i]);
+			return x.join('');
+		  }
+
+		  var md5 = global.md5 = function (s) {
+			return hex(md51(s));
+		  }
+
+		  /* this function is much faster,
+		  so if possible we use it. Some IEs
+		  are the only ones I know of that
+		  need the idiotic second function,
+		  generated by an if clause.  */
+
+		  var add32 = function (a, b) {
+			return (a + b) & 0xFFFFFFFF;
+		  }
+
+		  if (md5('hello') != '5d41402abc4b2a76b9719d911017c592') {
+			add32 = function (x, y) {
+			  var lsw = (x & 0xFFFF) + (y & 0xFFFF),
+				msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+			  return (msw << 16) | (lsw & 0xFFFF);
+			}
+		  }
+
+		})(window);
+	</script>
+	<script>
+		function generateHashedSimpleTags(first, last, address, zip, tagFormat, tagLength, bits, encoding) {
+			var numTags = 0;
+			if (address && zip) {
+				numTags = 1;
+				if (last) {
+					numTags = 2;
+					if (first) numTags = 3;
+				}
+			} else return [];
+			var addressTag = generateStAddrHelper(address, tagFormat, tagLength);
+			zip = generateStZipHelper(zip);
+			var toReturn = [
+				hashInt64(zip + ':::' + addressTag, bits, encoding)
+			];
+			if (numTags > 1) {
+				last = generateStNameHelper(last);
+				toReturn[1] = hashInt64(zip + ':' + last + '::' + addressTag, bits, encoding);
+				if (numTags > 2) {
+					first = generateStNameHelper(first);
+					toReturn[2] = hashInt64(zip + ':' + last + ':' + first + ':' + addressTag, bits, encoding);
+				}
+			}
+			return toReturn;
+		}
+
+		function generateStAddrHelper(address, tagFormat, tagLength) {
+				
+			var addrChunkZeroWeights = [
+				'POB', 'PMB', 'BOX', 'ST', 'STE', 'AVE', 'AV', 'DR', 'RD', 'APT', 
+				'LN', 'N', 'E', 'S', 'W', 'NW', 'NE', 'SE', 'SW', 'BLVD', 'CIR', 'WA', 'WAY', 
+				'CT', 'PKWY', 'RR', 'UNIT', 'TER'
+			];
+
+			var numDecode = {
+				zero: '0',
+				one: '1',
+				two: '2',
+				three: '3',
+				four: '4',
+				five: '5',
+				six: '6',
+				seven: '7',
+				eight: '8',
+				nine: '9',
+				ten: '10',
+				eleven: '11',
+				twelve: '12',
+				thirteen: '13',
+				fourteen: '14',
+				fifteen: '15',
+				sixteen: '16',
+				seventeen: '17',
+				eighteen: '18',
+				nineteen: '19',
+				twenty: '20',
+				thirty: '30',
+				forty: '40',
+				fifty: '50',
+				sixty: '60',
+				seventy: '70',
+				eighty: '80',
+				ninety: '90',
+
+				first: '1st',
+				second: '2nd',
+				third: '3rd',
+				fourth: '4th',
+				fifth: '5th',
+				sixth: '6th',
+				seventh: '7th',
+				eighth: '8th',
+				nineth: '9th',
+				tenth: '10th',
+				eleventh: '11th',
+				twelfth: '12th',
+				thirteenth: '13th',
+				fourteenth: '14th',
+				fifteenth: '15th',
+				sixteenth: '16th',
+				seventeenth: '17th',
+				eighteenth: '18th',
+				nineteenth: '19th',
+				twentieth: '20th',
+			};	
+			
+			address = address.toUpperCase().replace(/[^0-9A-Za-z ]/g, '').trim();
+			
+			var tokWeight = [];
+			var toks = address.split(' ');
+			var cc = toks.length;
+			for (var i = 0; i < cc; i++) {
+				toks[i] = toks[i].trim();
+				if (tagFormat == 1) {
+					if (numDecode[toks[i].toLowerCase()]) toks[i] = numDecode[toks[i].toLowerCase()];
+				}
+				tokWeight[i] = toks[i].length;
+				if (/^\d$/.test(toks[i].charAt(0))) tokWeight[i] = ((tokWeight[i] + 3) * 3) / 2;
+				if (addrChunkZeroWeights.includes(toks[i])) tokWeight[i] = 0;
+			}
+			
+			//console.log(toks);
+				
+			for (var i = 0; i < cc; i++) {
+				for (var j = i + 1; j < cc; j++) {
+					if (tokWeight[j] > tokWeight[i]) {
+						var k = tokWeight[i];
+						var p = toks[i];
+						tokWeight[i] = tokWeight[j];
+						toks[i] = toks[j];
+						tokWeight[j] = k;
+						toks[j] = p;
+					}
+				}
+			}
+			
+			//console.log(toks);
+			
+			return toks.join(' ').toUpperCase().replace(/[^0-9A-Z]/g, '').substring(0, tagLength);	
+		}
+
+		function generateStNameHelper(s) {
+			return s.toUpperCase().replace(/[^A-Z]/g, '');
+		}
+
+		function generateStZipHelper(s) {
+			s = s.replace(/[^0-9]/g, '').padStart(5, '0');
+			if (s.length > 5) s = s.substring(0, 5);
+			return s;
+		}
+
+		function hashInt64(x, bits = 64, encoding = 0) {
+			
+			var md5 = window.md5(x.trim().toLowerCase());
+			var x1 = md5.substring(0, 8);
+			var x2 = md5.substring(8, 16);
+			var x3 = md5.substring(16, 24);
+			var x4 = md5.substring(24, 32);
+			
+			var i1 = BigInt(parseInt(x1, 16));
+			var i2 = BigInt(parseInt(x2, 16));
+			var i3 = BigInt(parseInt(x3, 16));
+			var i4 = BigInt(parseInt(x4, 16));
+			
+			var overflow = 2n ** 63n;
+			
+			i1 = leftShiftOverflow(i1, 48n, overflow);
+			i2 = leftShiftOverflow(i2, 32n, overflow);
+			i3 = leftShiftOverflow(i3, 16n, overflow);
+			
+			var i = i1 ^ i2 ^ i3 ^ i4;
+			if (i < 0) i *= -1n;
+				
+			if (bits == 32) i = i % BigInt(parseInt('7FFFFFED', 16));
+			else if (bits == 16) i = i % BigInt(parseInt('FFF1', 16));
+			else if (bits == 8) i = i % BigInt(parseInt('FB', 16));
+			else i = i % BigInt(parseInt('7FFFFFFFFFFFE96B', 16));
+			
+			if (encoding == 1) return i.toString(16);
+			else if (encoding == 2) return btoa(i.toString());
+			else return i.toString();
+			
+		}
+
+		function leftShiftOverflow(n, shift, overflow) {
+			n = n * (2n ** shift);
+			var sign = n / overflow;
+			if (sign % 2n) return (n % overflow) - overflow;
+			else return n % overflow;
+		}
+	</script>
+	<script>
+		function emptyGlobalVariables() {
+			inputInfo = {
+				delimiter: '',
+				first: '',
+				last: '',
+				address: '',
+				zip: ''
+			};
+			outputInfo = {
+				capitalization: '',
+				trim: '',
+				alphanumeric: '',
+				hashSalt: '',
+				tagFormat: '',
+				tagLength: '',
+				hashLength: '',
+				hashEncoding: ''
+			}
+
+			header = {};
+			output = '';
+			errors = 0;
+
+			fileInputId = 'file-input';
+			fileInput = document.getElementById(fileInputId);
+			contentContainerId = 'content-container';
+			contentContainer = document.getElementById(contentContainerId);
+		}
+
+		//flow functions
+		async function step1(pageLoad = false) { //first step in flow
+			if (!pageLoad) await clearContentContainer();
+
+			emptyGlobalVariables();
+			fileInput.value = null;
+
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'File Selection';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+
+			var content = document.createElement('div');
+			var fileInputLabel = document.createElement('label');
+			fileInputLabel.className = 'accent clickable';
+			fileInputLabel.htmlFor = 'file-input';
+			fileInputLabel.innerHTML = 'Click here';
+			content.appendChild(fileInputLabel);
+			content.innerHTML += ' to select a file to hash.<br>Note that you must select a file that has headers.';
+			contentContainer.appendChild(content);
+
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+
+			var nextButton = createNextButton();
+			nextButton.classList.add('disabled');
+			nextButton.onclick = function() { 
+				if (this.classList.contains('disabled')) return;
+				step2();
+			};
+			contentContainer.appendChild(nextButton);
+
+			fileInput.addEventListener ('change', () => {
+				if (fileInput.value) nextButton.classList.remove('disabled');
+				else nextButton.classList.add('disabled');
+			});
+		}
+		async function step2() { //second step in flow
+			await clearContentContainer();
+
+			var delimiterInputId = 'input-delimiter';
+
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'File Type';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+
+			var content = document.createElement('div');
+			content.innerHTML += 'What type of file is this?';
+			contentContainer.appendChild(content);
+
+			contentContainer.appendChild(createSpacer());
+			
+			var radioButtonsDiv = document.createElement('div');
+			radioButtonsDiv.className = 'center-left';
+
+			var radioButtonCSV = document.createElement('input');
+			radioButtonCSV.id = delimiterInputId + '-csv';
+			radioButtonCSV.name = delimiterInputId;
+			radioButtonCSV.type = 'radio';
+			radioButtonCSV.value = ',';
+			var radioButtonCSVLabel = document.createElement('label');
+			radioButtonCSVLabel.htmlFor = delimiterInputId + '-csv';
+			radioButtonCSVLabel.innerHTML = 'CSV';
+			radioButtonsDiv.appendChild(radioButtonCSV);
+			radioButtonsDiv.appendChild(radioButtonCSVLabel);
+
+			radioButtonsDiv.appendChild(document.createElement('br'));
+
+			var radioButtonTSV = document.createElement('input');
+			radioButtonTSV.id = delimiterInputId + '-tsv';
+			radioButtonTSV.name = delimiterInputId;
+			radioButtonTSV.type = 'radio';
+			radioButtonTSV.value = '\t';
+			var radioButtonTSVLabel = document.createElement('label');
+			radioButtonTSVLabel.htmlFor = delimiterInputId + '-tsv';
+			radioButtonTSVLabel.innerHTML = 'TSV';
+			radioButtonsDiv.appendChild(radioButtonTSV);
+			radioButtonsDiv.appendChild(radioButtonTSVLabel);
+			
+			contentContainer.appendChild(radioButtonsDiv);
+
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			
+			var nextButton = createNextButton();
+			nextButton.classList.add('disabled');
+			nextButton.onclick = function() { 
+			if (this.classList.contains('disabled')) return;
+				inputInfo.delimiter = getRadioButtonValue(delimiterInputId);
+				step3();
+			};
+			contentContainer.appendChild(nextButton);
+
+			document.getElementsByName(delimiterInputId).forEach(e => {
+				e.addEventListener('change', function () {
+					getFileHeader(e.value);
+					nextButton.classList.remove('disabled');
+				});
+			});
+		}
+		async function step3() {
+			await clearContentContainer();
+
+			var relevantFields = {
+				first: 'First name',
+				last: 'Last name',
+				address: 'Address',
+				zip: 'Zip'
+			};
+
+			var headerInputId = 'input-header';
+
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'File Header';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+
+			var content = document.createElement('div');
+			content.innerHTML += 'What columns in your file correspond to what?  Identifying these allows us to add Versium SimpleTags to your output file.';
+			contentContainer.appendChild(content);
+
+			contentContainer.appendChild(createSpacer());
+
+			var twoColumnContainer = document.createElement('div');
+			Object.keys(relevantFields).forEach(k => {
+				var twoColumnLeft = document.createElement('div');
+				twoColumnLeft.className = 'two-column-left';
+				twoColumnLeft.innerHTML = relevantFields[k] + ':&nbsp;&nbsp;';
+				twoColumnContainer.appendChild(twoColumnLeft);
+				var twoColumnRight = document.createElement('div');
+				twoColumnRight.className = 'two-column-right';
+				var twoColumnRightInput = document.createElement('select');
+				twoColumnRightInput.id = headerInputId + '-' + k;
+				twoColumnRightInput.name = headerInputId;
+				var defaultOption = document.createElement('option');
+				defaultOption.innerHTML = 'None';
+				defaultOption.selected = true;
+				defaultOption.value = -1;
+				twoColumnRightInput.appendChild(defaultOption);
+				for (var i = 0; i < header.length; i++) {
+					var optionElement = document.createElement('option');
+					optionElement.innerHTML = header[i];
+					optionElement.value = i;
+					twoColumnRightInput.appendChild(optionElement);
+				}
+				twoColumnRight.appendChild(twoColumnRightInput);
+				twoColumnContainer.appendChild(twoColumnRight);
+				twoColumnContainer.appendChild(document.createElement('br'));
+			});
+			contentContainer.appendChild(twoColumnContainer);
+
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			
+			var nextButton = createNextButton();
+			//nextButton.classList.add('disabled');
+			nextButton.onclick = function() { 
+				if (this.classList.contains('disabled')) return;
+				Object.keys(relevantFields).forEach(k => {
+					inputInfo[k] = document.getElementById(headerInputId + '-' + k).value;
+				});
+				step4();
+			};
+			contentContainer.appendChild(nextButton);
+
+			/*document.getElementsByName(headerInputId).forEach(e => {
+				e.addEventListener('change', function () {
+					var undisable = true;
+					var headerInputs = document.getElementsByName(headerInputId);
+					for (var i = 0; i < headerInputs.length; i++) {
+						if (headerInputs[i].value == 'unselected') undisable = false;
+					}
+					if (undisable) nextButton.classList.remove('disabled');
+				});
+			});*/
+		}
+		async function step4() {
+			await clearContentContainer();
+			
+			var capitalizationInputId = 'input-capitalization';
+			var trimInputId = 'input-trim';
+			var alphanumericInputId = 'input-alphanumeric';
+			var hashSaltInputId = 'input-hashsalt';
+			var tagFormatInputId = 'input-tagformat';
+			var tagLengthInputId = 'input-taglength';
+			var hashLengthInputId = 'input-hashlength';
+			var hashEncodingInputId = 'input-hashencoding';
+
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'Options';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+
+			var content = document.createElement('div');
+			content.innerHTML += 'Are there any options you\'d like to select for your output file?';
+			contentContainer.appendChild(content);
+			
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			
+			var optionsDiv = document.createElement('div');
+			optionsDiv.className = 'center-left';
+			
+				//capitalization
+				var capitalizationDiv = document.createElement('div');
+				capitalizationDiv.innerHTML = 'Edit capitalization:';
+				capitalizationDiv.appendChild(document.createElement('br'));
+				
+					var radioLowerCase = document.createElement('input');
+					radioLowerCase.checked = true;
+					radioLowerCase.id = capitalizationInputId + '-lower';
+					radioLowerCase.name = capitalizationInputId;
+					radioLowerCase.type = 'radio';
+					radioLowerCase.value = 1;
+					var radioLowerCaseLabel = document.createElement('label');
+					radioLowerCaseLabel.htmlFor = capitalizationInputId + '-lower';
+					radioLowerCaseLabel.innerHTML = 'Lowercase';
+					capitalizationDiv.appendChild(radioLowerCase);
+					capitalizationDiv.appendChild(radioLowerCaseLabel);
+					
+					capitalizationDiv.appendChild(document.createElement('br'));
+					
+					var radioUpperCase = document.createElement('input');
+					radioUpperCase.id = capitalizationInputId + '-upper';
+					radioUpperCase.name = capitalizationInputId;
+					radioUpperCase.type = 'radio';
+					radioUpperCase.value = 2;
+					var radioUpperCaseLabel = document.createElement('label');
+					radioUpperCaseLabel.htmlFor = capitalizationInputId + '-upper';
+					radioUpperCaseLabel.innerHTML = 'Uppercase';
+					capitalizationDiv.appendChild(radioUpperCase);
+					capitalizationDiv.appendChild(radioUpperCaseLabel);
+					
+					capitalizationDiv.appendChild(document.createElement('br'));
+					
+					var radioNoCapitalization = document.createElement('input');
+					radioNoCapitalization.id = capitalizationInputId + '-none';
+					radioNoCapitalization.name = capitalizationInputId;
+					radioNoCapitalization.type = 'radio';
+					radioNoCapitalization.value = 0;
+					var radioNoCapitalizationLabel = document.createElement('label');
+					radioNoCapitalizationLabel.htmlFor = capitalizationInputId + '-none';
+					radioNoCapitalizationLabel.innerHTML = 'Maintain capitalization';
+					capitalizationDiv.appendChild(radioNoCapitalization);
+					capitalizationDiv.appendChild(radioNoCapitalizationLabel);
+			
+				optionsDiv.appendChild(capitalizationDiv);
+				optionsDiv.appendChild(createSpacer());
+				optionsDiv.appendChild(createSpacer());
+				
+				//trim
+				var trimDiv = document.createElement('div');
+				trimDiv.innerHTML = 'Trim fields:';
+				trimDiv.appendChild(document.createElement('br'));
+				
+					var radioTrim = document.createElement('input');
+					radioTrim.checked = true;
+					radioTrim.id = trimInputId + '-trim';
+					radioTrim.name = trimInputId;
+					radioTrim.type = 'radio';
+					radioTrim.value = 1;
+					var radioTrimLabel = document.createElement('label');
+					radioTrimLabel.htmlFor = trimInputId + '-trim';
+					radioTrimLabel.innerHTML = 'Trim leading/trailing whitespace';
+					trimDiv.appendChild(radioTrim);
+					trimDiv.appendChild(radioTrimLabel);
+					
+					trimDiv.appendChild(document.createElement('br'));
+				
+					var radioNoTrim = document.createElement('input');
+					radioNoTrim.id = trimInputId + '-notrim';
+					radioNoTrim.name = trimInputId;
+					radioNoTrim.type = 'radio';
+					radioNoTrim.value = 0;
+					var radioNoTrimLabel = document.createElement('label');
+					radioNoTrimLabel.htmlFor = trimInputId + '-notrim';
+					radioNoTrimLabel.innerHTML = 'Don\'t trim leading/trailing whitespace';
+					trimDiv.appendChild(radioNoTrim);
+					trimDiv.appendChild(radioNoTrimLabel);
+					
+				optionsDiv.appendChild(trimDiv);
+				optionsDiv.appendChild(createSpacer());
+				optionsDiv.appendChild(createSpacer());
+				
+				//alphanumeric
+				var alphanumericDiv = document.createElement('div');
+				alphanumericDiv.innerHTML = 'Non-alphanumeric characters:';
+				alphanumericDiv.appendChild(document.createElement('br'));
+				
+					var radioAlphanumeric = document.createElement('input');
+					//radioAlphanumeric.checked = true;
+					radioAlphanumeric.disabled = true;
+					radioAlphanumeric.id = alphanumericInputId + '-only';
+					radioAlphanumeric.name = alphanumericInputId;
+					radioAlphanumeric.type = 'radio';
+					radioAlphanumeric.value = 1;
+					var radioAlphanumericLabel = document.createElement('label');
+					radioAlphanumericLabel.htmlFor = alphanumericInputId + '-only';
+					radioAlphanumericLabel.innerHTML = 'Remove non-alphanumeric characters';
+					alphanumericDiv.appendChild(radioAlphanumeric);
+					alphanumericDiv.appendChild(radioAlphanumericLabel);
+					
+					alphanumericDiv.appendChild(document.createElement('br'));
+				
+					var radioNonAlphanumeric = document.createElement('input');
+					radioNonAlphanumeric.checked = true;
+					radioNonAlphanumeric.id = alphanumericInputId + '-non';
+					radioNonAlphanumeric.name = alphanumericInputId;
+					radioNonAlphanumeric.type = 'radio';
+					radioNonAlphanumeric.value = 0;
+					var radioNonAlphanumericLabel = document.createElement('label');
+					radioNonAlphanumericLabel.htmlFor = alphanumericInputId + '-non';
+					radioNonAlphanumericLabel.innerHTML = 'Leave non-alphanumeric characters';
+					alphanumericDiv.appendChild(radioNonAlphanumeric);
+					alphanumericDiv.appendChild(radioNonAlphanumericLabel);
+					
+				optionsDiv.appendChild(alphanumericDiv);
+				optionsDiv.appendChild(createSpacer());
+				optionsDiv.appendChild(createSpacer());
+			
+			contentContainer.appendChild(optionsDiv);
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			
+			var advancedOptionsButton = document.createElement('div');
+			advancedOptionsButton.className = 'accent clickable';
+			advancedOptionsButton.innerHTML = 'Show advanced options';
+			advancedOptionsButton.onclick = () => {
+				var advancedOptionsDiv = document.getElementById('advanced-options');
+				if (advancedOptionsDiv.style.display == 'none') advancedOptionsDiv.style.display = 'inline-block';
+				else advancedOptionsDiv.style.display = 'none';
+			};
+			contentContainer.appendChild(advancedOptionsButton);
+			
+			var advancedOptionsDiv = document.createElement('div');
+			advancedOptionsDiv.className = 'center-left';
+			advancedOptionsDiv.id = 'advanced-options';
+			advancedOptionsDiv.style.display = 'none';
+			
+				advancedOptionsDiv.appendChild(createSpacer());
+				advancedOptionsDiv.appendChild(createSpacer());
+				
+				//hash salt
+				var hashSaltDiv = document.createElement('div');
+				hashSaltDiv.innerHTML = 'Hash salt (this doesn\'t apply to Versium SimpleTags)';
+				hashSaltDiv.appendChild(document.createElement('br'));
+				
+					var inputHashSalt = document.createElement('input');
+					inputHashSalt.id = hashSaltInputId;
+					inputHashSalt.name = hashSaltInputId;
+					inputHashSalt.type = 'text';
+					inputHashSalt.value = '';
+					inputHashSalt.placeholder = 'Salt to be prepended';
+					hashSaltDiv.appendChild(inputHashSalt);
+				
+				advancedOptionsDiv.appendChild(hashSaltDiv);
+				
+				advancedOptionsDiv.appendChild(createSpacer());
+				advancedOptionsDiv.appendChild(createSpacer());
+				
+				//tag format
+				var tagFormatDiv = document.createElement('div');
+				tagFormatDiv.innerHTML = 'Versium SimpleTag format:';
+				tagFormatDiv.appendChild(document.createElement('br'));
+				
+					var radioDecode = document.createElement('input');
+					radioDecode.checked = true;
+					radioDecode.id = tagFormatInputId + '-decode';
+					radioDecode.name = tagFormatInputId;
+					radioDecode.type = 'radio';
+					radioDecode.value = 1;
+					var radioDecodeLabel = document.createElement('label');
+					radioDecodeLabel.htmlFor = tagFormatInputId + '-decode';
+					radioDecodeLabel.innerHTML = 'Decode numbers (default)';
+					tagFormatDiv.appendChild(radioDecode);
+					tagFormatDiv.appendChild(radioDecodeLabel);
+					
+					tagFormatDiv.appendChild(document.createElement('br'));
+					
+					var radioNoDecode = document.createElement('input');
+					radioNoDecode.id = tagFormatInputId + '-nodecode';
+					radioNoDecode.name = tagFormatInputId;
+					radioNoDecode.type = 'radio';
+					radioNoDecode.value = 0;
+					var radioNoDecodeLabel = document.createElement('label');
+					radioNoDecodeLabel.htmlFor = tagFormatInputId + '-nodecode';
+					radioNoDecodeLabel.innerHTML = 'Do not decode numbers';
+					tagFormatDiv.appendChild(radioNoDecode);
+					tagFormatDiv.appendChild(radioNoDecodeLabel);
+				
+				advancedOptionsDiv.appendChild(tagFormatDiv);
+				
+				advancedOptionsDiv.appendChild(createSpacer());
+				advancedOptionsDiv.appendChild(createSpacer());
+				
+				//tag legnth
+				var tagLengthDiv = document.createElement('div');
+				tagLengthDiv.innerHTML = 'Versium SimpleTag address length:';
+				tagLengthDiv.appendChild(document.createElement('br'));
+				
+					var radioEight = document.createElement('input');
+					radioEight.checked = true;
+					radioEight.id = tagLengthInputId + '-eight';
+					radioEight.name = tagLengthInputId;
+					radioEight.type = 'radio';
+					radioEight.value = 8;
+					var radioEightLabel = document.createElement('label');
+					radioEightLabel.htmlFor = tagLengthInputId + '-eight';
+					radioEightLabel.innerHTML = 'Eight (default)';
+					tagLengthDiv.appendChild(radioEight);
+					tagLengthDiv.appendChild(radioEightLabel);
+					
+					tagLengthDiv.appendChild(document.createElement('br'));
+					
+					var radioTen = document.createElement('input');
+					radioTen.id = tagLengthInputId + '-ten';
+					radioTen.name = tagLengthInputId;
+					radioTen.type = 'radio';
+					radioTen.value = 10;
+					var radioTenLabel = document.createElement('label');
+					radioTenLabel.htmlFor = tagLengthInputId + '-ten';
+					radioTenLabel.innerHTML = 'Ten';
+					tagLengthDiv.appendChild(radioTen);
+					tagLengthDiv.appendChild(radioTenLabel);
+					
+					tagLengthDiv.appendChild(document.createElement('br'));
+					
+					var radioTwelve = document.createElement('input');
+					radioTwelve.id = tagLengthInputId + '-twelve';
+					radioTwelve.name = tagLengthInputId;
+					radioTwelve.type = 'radio';
+					radioTwelve.value = 12;
+					var radioTwelveLabel = document.createElement('label');
+					radioTwelveLabel.htmlFor = tagLengthInputId + '-twelve';
+					radioTwelveLabel.innerHTML = 'Twelve';
+					tagLengthDiv.appendChild(radioTwelve);
+					tagLengthDiv.appendChild(radioTwelveLabel);
+					
+				advancedOptionsDiv.appendChild(tagLengthDiv);
+				
+				advancedOptionsDiv.appendChild(createSpacer());
+				advancedOptionsDiv.appendChild(createSpacer());
+					
+				//hash length
+				var hashLengthDiv = document.createElement('div');
+				hashLengthDiv.innerHTML = 'Versium SimpleTag hash length:';
+				hashLengthDiv.appendChild(document.createElement('br'));
+				
+					var radio64Bit = document.createElement('input');
+					radio64Bit.checked = true;
+					radio64Bit.id = hashLengthInputId + '-64bit';
+					radio64Bit.name = hashLengthInputId;
+					radio64Bit.type = 'radio';
+					radio64Bit.value = 64;
+					var radio64BitLabel = document.createElement('label');
+					radio64BitLabel.htmlFor = hashLengthInputId + '-64bit';
+					radio64BitLabel.innerHTML = '64 Bit (default)';
+					hashLengthDiv.appendChild(radio64Bit);
+					hashLengthDiv.appendChild(radio64BitLabel);
+					
+					hashLengthDiv.appendChild(document.createElement('br'));
+					
+					var radio32Bit = document.createElement('input');
+					radio32Bit.id = hashLengthInputId + '-32bit';
+					radio32Bit.name = hashLengthInputId;
+					radio32Bit.type = 'radio';
+					radio32Bit.value = 32;
+					var radio32BitLabel = document.createElement('label');
+					radio32BitLabel.htmlFor = hashLengthInputId + '-32bit';
+					radio32BitLabel.innerHTML = '32 Bit';
+					hashLengthDiv.appendChild(radio32Bit);
+					hashLengthDiv.appendChild(radio32BitLabel);
+					
+					hashLengthDiv.appendChild(document.createElement('br'));
+					
+					var radio16Bit = document.createElement('input');
+					radio16Bit.id = hashLengthInputId + '-16bit';
+					radio16Bit.name = hashLengthInputId;
+					radio16Bit.type = 'radio';
+					radio16Bit.value = 16;
+					var radio16BitLabel = document.createElement('label');
+					radio16BitLabel.htmlFor = hashLengthInputId + '-16bit';
+					radio16BitLabel.innerHTML = '16 Bit';
+					hashLengthDiv.appendChild(radio16Bit);
+					hashLengthDiv.appendChild(radio16BitLabel);
+					
+					hashLengthDiv.appendChild(document.createElement('br'));
+					
+					var radio8Bit = document.createElement('input');
+					radio8Bit.id = hashLengthInputId + '-8bit';
+					radio8Bit.name = hashLengthInputId;
+					radio8Bit.type = 'radio';
+					radio8Bit.value = 8;
+					var radio8BitLabel = document.createElement('label');
+					radio8BitLabel.htmlFor = hashLengthInputId + '-8bit';
+					radio8BitLabel.innerHTML = '8 Bit';
+					hashLengthDiv.appendChild(radio8Bit);
+					hashLengthDiv.appendChild(radio8BitLabel);
+					
+				advancedOptionsDiv.appendChild(hashLengthDiv);
+				
+				advancedOptionsDiv.appendChild(createSpacer());
+				advancedOptionsDiv.appendChild(createSpacer());
+				
+				//hash encoding
+				var hashEncodingDiv = document.createElement('div');
+				hashEncodingDiv.innerHTML = 'Versium SimpleTag hash encoding:';
+				hashEncodingDiv.appendChild(document.createElement('br'));
+				
+					var radioDecimal = document.createElement('input');
+					radioDecimal.checked = true;
+					radioDecimal.id = hashEncodingInputId + '-decimal';
+					radioDecimal.name = hashEncodingInputId;
+					radioDecimal.type = 'radio';
+					radioDecimal.value = 0;
+					var radioDecimalLabel = document.createElement('label');
+					radioDecimalLabel.htmlFor = hashEncodingInputId + '-decimal';
+					radioDecimalLabel.innerHTML = 'Decimal (default)';
+					hashEncodingDiv.appendChild(radioDecimal);
+					hashEncodingDiv.appendChild(radioDecimalLabel);
+					
+					hashEncodingDiv.appendChild(document.createElement('br'));
+					
+					var radioHex = document.createElement('input');
+					radioHex.id = hashEncodingInputId + '-hex';
+					radioHex.name = hashEncodingInputId;
+					radioHex.type = 'radio';
+					radioHex.value = 1;
+					var radioHexLabel = document.createElement('label');
+					radioHexLabel.htmlFor = hashEncodingInputId + '-hex';
+					radioHexLabel.innerHTML = 'Hex';
+					hashEncodingDiv.appendChild(radioHex);
+					hashEncodingDiv.appendChild(radioHexLabel);
+					
+					hashEncodingDiv.appendChild(document.createElement('br'));
+					
+					var radioBase64 = document.createElement('input');
+					radioBase64.id = hashEncodingInputId + '-base64';
+					radioBase64.name = hashEncodingInputId;
+					radioBase64.type = 'radio';
+					radioBase64.value = 2;
+					var radioBase64Label = document.createElement('label');
+					radioBase64Label.htmlFor = hashEncodingInputId + '-base64';
+					radioBase64Label.innerHTML = 'Base64';
+					hashEncodingDiv.appendChild(radioBase64);
+					hashEncodingDiv.appendChild(radioBase64Label);
+				
+				advancedOptionsDiv.appendChild(hashEncodingDiv);
+			
+			contentContainer.appendChild(advancedOptionsDiv);
+
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+
+			var nextButton = createNextButton('Finish');
+			nextButton.onclick = async function() {
+				outputInfo.capitalization = Number(getRadioButtonValue(capitalizationInputId));
+				outputInfo.trim = Number(getRadioButtonValue(trimInputId));
+				outputInfo.alphanumeric = Number(getRadioButtonValue(alphanumericInputId));
+				outputInfo.hashSalt = document.getElementById(hashSaltInputId).value;
+				outputInfo.tagFormat = Number(getRadioButtonValue(tagFormatInputId));
+				outputInfo.tagLength = Number(getRadioButtonValue(tagLengthInputId));
+				outputInfo.hashLength = Number(getRadioButtonValue(hashLengthInputId));
+				outputInfo.hashEncoding = Number(getRadioButtonValue(hashEncodingInputId));
+				step5();
+			};
+			contentContainer.appendChild(nextButton);
+		}
+		async function step5() {
+			await clearContentContainer();
+
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'Hashing...';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+
+			var content = document.createElement('div');
+			content.innerHTML += 'We\'re processing your file.  It will download as soon as we\'re done with it!';
+			contentContainer.appendChild(content);
+			
+			var reader = new FileReader();
+			reader.fileName = fileInput.files[0].name;
+			reader.onload = function (progressEvent) {
+				var delimiter = inputInfo.delimiter;
+				var additionalHeaderFields = [];
+				if (inputInfo.address >= 0 && inputInfo.zip >= 0) {
+					additionalHeaderFields = ['VERSIUM STADDR HASHED'];
+					if (inputInfo.last >= 0) {
+						additionalHeaderFields.push('VERSIUM STHHLD HASHED');
+						if (inputInfo.first >= 0) additionalHeaderFields.push('VERSIUM ST10 HASHED');
+					}
+				}
+				var outputHeader = header.concat(additionalHeaderFields);
+				output = outputHeader.join(delimiter) + '\n';
+				var inputLines = this.result.split('\n');
+				for (var i = 1; i < inputLines.length; i++) {
+					if (inputLines[i].trim() == '') continue;
+					if (outputInfo.capitalization == 1) inputLines[i] = inputLines[i].toLowerCase();
+					else if (outputInfo.capitalization == 2) inputLines[i] = inputLines[i].toUpperCase();
+					var parsedLine = parseLine(inputLines[i], delimiter, outputInfo.alphanumeric);
+					if (parsedLine.length != header.length) {
+						output += 'Malformatted line\n';
+						errors++;
+						continue;
+					}
+					var outputLine = parsedLine.slice();
+					for (var j = 0; j < outputLine.length; j++) {
+						if (outputInfo.trim) outputLine[j] = outputLine[j].trim();
+						outputLine[j] = md5(outputInfo.hashSalt + outputLine[j]);
+					}
+					var appendedData = generateHashedSimpleTags(parsedLine[inputInfo.first], parsedLine[inputInfo.last], parsedLine[inputInfo.address], parsedLine[inputInfo.zip], outputInfo.tagFormat, outputInfo.tagLength, outputInfo.hashLength, outputInfo.hashEncoding);
+					//appendedData = addHashes(appendedData, outputInfo.hashLength, outputInfo.hashEncoding);
+					outputLine = outputLine.concat(appendedData);
+					output += outputLine.join(delimiter) + '\n';
+				}
+				download(appendToFilename(this.fileName, '_versium'), output);
+				step6();
+			};
+			reader.readAsText(fileInput.files[0]);
+		}
+		async function step6() {
+			await clearContentContainer();
+
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'All done';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+
+			var content = document.createElement('div');
+			content.innerHTML += 'Your file has been processed and is downloading now!';
+			if (errors) {
+				content.appendChild(createSpacer());
+				content.innerHTML += 'There were ' + errors + ' errors or malformatted lines in your input file.  These lines are noted in the output file as "Malformatted line".';
+			}
+			contentContainer.appendChild(content);
+
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+
+			var nextButton = createNextButton('Start Over');
+			//nextButton.classList.add('disabled');
+			nextButton.onclick = function() { 
+				if (this.classList.contains('disabled')) return;
+				step1();
+			};
+			contentContainer.appendChild(nextButton);
+		}
+
+		//helper functions
+		function appendToFilename(filename, string){
+			var dotIndex = filename.lastIndexOf(".");
+			if (dotIndex == -1) return filename + string;
+			else return filename.substring(0, dotIndex) + string + filename.substring(dotIndex);
+		} 
+		async function clearContentContainer() { //fade out and clear container that contains content
+			contentContainer.style.opacity = 0;
+			await new Promise(r => setTimeout(r, 500));
+			contentContainer.innerHTML = '';
+			contentContainer.style.opacity = 1;
+		}
+		function createNextButton(innerText = 'Next') { //returns a "next" button div
+			var nextButton = document.createElement('div');
+			nextButton.className = 'content-container-button';
+			nextButton.innerHTML = innerText;
+
+			var icon = document.createElement('i');
+			icon.className = 'icon-right-arrow';
+			nextButton.appendChild(icon);
+
+			return nextButton;
+		}
+		function createSpacer() { //returns a spacer div
+			var spacer = document.createElement('div');
+			spacer.className = 'spacer';
+			return spacer;
+		}
+		function download(filename, contents) {
+			var e = document.createElement('a');
+			e.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
+			e.setAttribute('download', filename);
+			e.style.display = 'none';
+			document.body.appendChild(e);
+			e.click();
+			document.body.removeChild(e);
+		}
+		function getFileHeader(delimiter) { //get column names and indexes
+			var reader = new FileReader();
+			reader.onload = function (progressEvent) {
+				header = parseLine(reader.result.split('\n').shift(), delimiter, false);
+			}
+			reader.readAsText(fileInput.files[0]);
+		}
+		function getRadioButtonValue(name) {
+			return document.querySelector('input[name="' + name + '"]:checked').value;
+		}
+		function parseLine(line, delimiter = ',', removeNonAlphanumerics = true) {
+			var insideQuote = false,
+				entries = [],
+				entry = [];
+			line = line.trimEnd();
+			line.split('').forEach (c => {
+				if (c === '"') {
+					insideQuote = !insideQuote;
+				} else {
+					if (c == delimiter && !insideQuote) {
+						entries.push(entry.join(''));
+						entry = [];
+					} else {
+					//} else if (!removeNonAlphanumerics || /[a-zA-Z0-9 -]/.test(c)) {
+						entry.push(c);
+					}
+				}
+			});
+			entries.push(entry.join(''));
+			return entries;
+		}
+	</script>
+	<script>
+		step1(true);
+	</script>
+</body>
