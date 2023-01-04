@@ -75,6 +75,7 @@
 		.main-container {
 			background: #ffffff;
 			border-radius: 32px;
+			margin-bottom: 64px;
 			margin-left: 50%;
 			margin-top: 64px;
 			padding: 24px;
@@ -498,14 +499,13 @@
 				zip: ''
 			};
 			outputInfo = {
-				capitalization: '',
-				trim: '',
-				alphanumeric: '',
+				capitalization: 1,
+				trim: 1,
 				hashSalt: '',
-				tagFormat: '',
-				tagLength: '',
-				hashLength: '',
-				hashEncoding: ''
+				tagFormat: 1,
+				tagLength: 8,
+				hashLength: 64,
+				hashEncoding: 0
 			}
 
 			header = {};
@@ -516,15 +516,17 @@
 			fileInput = document.getElementById(fileInputId);
 			contentContainerId = 'content-container';
 			contentContainer = document.getElementById(contentContainerId);
+			
+			chooseOptions = 1;
 		}
 
 		//flow functions
-		async function step1(pageLoad = false) { //first step in flow
+		async function step0(pageLoad = false) { //first step in flow
 			if (!pageLoad) await clearContentContainer();
 
 			emptyGlobalVariables();
 			fileInput.value = null;
-
+			
 			var title = document.createElement('div');
 			title.className = 'content-container-title';
 			title.innerHTML = 'File Selection';
@@ -540,7 +542,7 @@
 			content.appendChild(fileInputLabel);
 			content.innerHTML += ' to select a file to hash.<br>Note that you must select a file that has headers.';
 			contentContainer.appendChild(content);
-
+			
 			contentContainer.appendChild(createSpacer());
 			contentContainer.appendChild(createSpacer());
 			contentContainer.appendChild(createSpacer());
@@ -549,167 +551,285 @@
 			nextButton.classList.add('disabled');
 			nextButton.onclick = function() { 
 				if (this.classList.contains('disabled')) return;
-				step2();
+				step1();
 			};
 			contentContainer.appendChild(nextButton);
 
 			fileInput.addEventListener ('change', () => {
-				if (fileInput.value) nextButton.classList.remove('disabled');
-				else nextButton.classList.add('disabled');
+				if (fileInput.value) {
+					header = getFileHeader();
+					nextButton.classList.remove('disabled');
+				} else nextButton.classList.add('disabled');
 			});
+		}
+		async function step1() {
+			await clearContentContainer();
+			
+			var chooseOptionsInputId = 'input-chooseoptions';
+			
+			var title = document.createElement('div');
+			title.className = 'content-container-title';
+			title.innerHTML = 'Options Selection';
+			contentContainer.appendChild(title);
+
+			contentContainer.appendChild(createSpacer());
+			
+			var content = document.createElement('div');
+			content.innerHTML = 'Would you like to customize how your file is hashed?';
+			contentContainer.appendChild(content);
+			
+			contentContainer.appendChild(createSpacer());
+			
+			var chooseOptionsButtonsDiv = document.createElement('div');
+			chooseOptionsButtonsDiv.className = 'center-left';
+			
+			var radioButtonChooseOptions = document.createElement('input');
+			radioButtonChooseOptions.id = chooseOptionsInputId + '-csv';
+			radioButtonChooseOptions.name = chooseOptionsInputId;
+			radioButtonChooseOptions.type = 'radio';
+			radioButtonChooseOptions.value = '1';
+			radioButtonChooseOptions.checked = true;
+			var radioButtonChooseOptionsLabel = document.createElement('label');
+			radioButtonChooseOptionsLabel.htmlFor = chooseOptionsInputId + '-csv';
+			radioButtonChooseOptionsLabel.innerHTML = 'Choose my hashing options';
+			chooseOptionsButtonsDiv.appendChild(radioButtonChooseOptions);
+			chooseOptionsButtonsDiv.appendChild(radioButtonChooseOptionsLabel);
+
+			chooseOptionsButtonsDiv.appendChild(document.createElement('br'));
+
+			var radioButtonDefaultOptions = document.createElement('input');
+			radioButtonDefaultOptions.id = chooseOptionsInputId + '-tsv';
+			radioButtonDefaultOptions.name = chooseOptionsInputId;
+			radioButtonDefaultOptions.type = 'radio';
+			radioButtonDefaultOptions.value = '0';
+			var radioButtonDefaultOptionsLabel = document.createElement('label');
+			radioButtonDefaultOptionsLabel.htmlFor = chooseOptionsInputId + '-tsv';
+			radioButtonDefaultOptionsLabel.innerHTML = 'Use default hashing options';
+			chooseOptionsButtonsDiv.appendChild(radioButtonDefaultOptions);
+			chooseOptionsButtonsDiv.appendChild(radioButtonDefaultOptionsLabel);
+			
+			contentContainer.appendChild(chooseOptionsButtonsDiv);	
+
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			contentContainer.appendChild(createSpacer());
+			
+			var nextButton = createNextButton();
+			nextButton.onclick = function() { 
+				chooseOptions = parseInt(getRadioButtonValue(chooseOptionsInputId));
+				step2();
+			};
+			contentContainer.appendChild(nextButton);
+			
 		}
 		async function step2() { //second step in flow
-			await clearContentContainer();
-
-			var delimiterInputId = 'input-delimiter';
-
-			var title = document.createElement('div');
-			title.className = 'content-container-title';
-			title.innerHTML = 'File Type';
-			contentContainer.appendChild(title);
-
-			contentContainer.appendChild(createSpacer());
-
-			var content = document.createElement('div');
-			content.innerHTML += 'What type of file is this?';
-			contentContainer.appendChild(content);
-
-			contentContainer.appendChild(createSpacer());
+			var numCsvFields = 0;
+			var numTsvFields = 0;
 			
-			var radioButtonsDiv = document.createElement('div');
-			radioButtonsDiv.className = 'center-left';
-
-			var radioButtonCSV = document.createElement('input');
-			radioButtonCSV.id = delimiterInputId + '-csv';
-			radioButtonCSV.name = delimiterInputId;
-			radioButtonCSV.type = 'radio';
-			radioButtonCSV.value = ',';
-			var radioButtonCSVLabel = document.createElement('label');
-			radioButtonCSVLabel.htmlFor = delimiterInputId + '-csv';
-			radioButtonCSVLabel.innerHTML = 'CSV';
-			radioButtonsDiv.appendChild(radioButtonCSV);
-			radioButtonsDiv.appendChild(radioButtonCSVLabel);
-
-			radioButtonsDiv.appendChild(document.createElement('br'));
-
-			var radioButtonTSV = document.createElement('input');
-			radioButtonTSV.id = delimiterInputId + '-tsv';
-			radioButtonTSV.name = delimiterInputId;
-			radioButtonTSV.type = 'radio';
-			radioButtonTSV.value = '\t';
-			var radioButtonTSVLabel = document.createElement('label');
-			radioButtonTSVLabel.htmlFor = delimiterInputId + '-tsv';
-			radioButtonTSVLabel.innerHTML = 'TSV';
-			radioButtonsDiv.appendChild(radioButtonTSV);
-			radioButtonsDiv.appendChild(radioButtonTSVLabel);
+			var splitFileName = fileInput.files[0].name.split('.');
+			if (splitFileName[splitFileName.length - 1].toLowerCase() == 'csv') {
+				numCsvFields = 1;
+				numTsvFields = 0;
+			} else if (splitFileName[splitFileName.length - 1].toLowerCase() == 'tsv') {
+				numCsvFields = 0;
+				numTsvFields = 1;
+			} else {
+				numCsvFields = parseLine(header, ',', false).length;
+				numTsvFields = parseLine(header, '\t', false).length;
+			}
 			
-			contentContainer.appendChild(radioButtonsDiv);
-
-			contentContainer.appendChild(createSpacer());
-			contentContainer.appendChild(createSpacer());
-			contentContainer.appendChild(createSpacer());
-			
-			var nextButton = createNextButton();
-			nextButton.classList.add('disabled');
-			nextButton.onclick = function() { 
-			if (this.classList.contains('disabled')) return;
-				inputInfo.delimiter = getRadioButtonValue(delimiterInputId);
+			if (!chooseOptions && numCsvFields != numTsvFields) {
+				if (numCsvFields > numTsvFields) inputInfo.delimiter = ',';
+				else inputInfo.delimiter = '\t';
+				header = parseLine(header, inputInfo.delimiter, false);
 				step3();
-			};
-			contentContainer.appendChild(nextButton);
+			} else {
+				await clearContentContainer();
 
-			document.getElementsByName(delimiterInputId).forEach(e => {
-				e.addEventListener('change', function () {
-					getFileHeader(e.value);
-					nextButton.classList.remove('disabled');
+				var delimiterInputId = 'input-delimiter';
+
+				var title = document.createElement('div');
+				title.className = 'content-container-title';
+				title.innerHTML = 'File Type';
+				contentContainer.appendChild(title);
+
+				contentContainer.appendChild(createSpacer());
+
+				var content = document.createElement('div');
+				content.innerHTML += 'What type of file is this?';
+				contentContainer.appendChild(content);
+
+				contentContainer.appendChild(createSpacer());
+				
+				var radioButtonsDiv = document.createElement('div');
+				radioButtonsDiv.className = 'center-left';
+
+				var radioButtonCSV = document.createElement('input');
+				radioButtonCSV.id = delimiterInputId + '-csv';
+				radioButtonCSV.name = delimiterInputId;
+				radioButtonCSV.type = 'radio';
+				radioButtonCSV.value = ',';
+				radioButtonCSV.checked = (numCsvFields > numTsvFields);
+				var radioButtonCSVLabel = document.createElement('label');
+				radioButtonCSVLabel.htmlFor = delimiterInputId + '-csv';
+				radioButtonCSVLabel.innerHTML = 'CSV';
+				radioButtonsDiv.appendChild(radioButtonCSV);
+				radioButtonsDiv.appendChild(radioButtonCSVLabel);
+
+				radioButtonsDiv.appendChild(document.createElement('br'));
+
+				var radioButtonTSV = document.createElement('input');
+				radioButtonTSV.id = delimiterInputId + '-tsv';
+				radioButtonTSV.name = delimiterInputId;
+				radioButtonTSV.type = 'radio';
+				radioButtonTSV.value = '\t';
+				radioButtonTSV.checked = (numTsvFields > numCsvFields);
+				var radioButtonTSVLabel = document.createElement('label');
+				radioButtonTSVLabel.htmlFor = delimiterInputId + '-tsv';
+				radioButtonTSVLabel.innerHTML = 'TSV';
+				radioButtonsDiv.appendChild(radioButtonTSV);
+				radioButtonsDiv.appendChild(radioButtonTSVLabel);
+				
+				contentContainer.appendChild(radioButtonsDiv);
+
+				contentContainer.appendChild(createSpacer());
+				contentContainer.appendChild(createSpacer());
+				contentContainer.appendChild(createSpacer());
+				
+				var nextButton = createNextButton();
+				if (!((numCsvFields > numTsvFields) || (numTsvFields > numCsvFields))) nextButton.classList.add('disabled');
+				nextButton.onclick = function() { 
+				if (this.classList.contains('disabled')) return;
+					inputInfo.delimiter = getRadioButtonValue(delimiterInputId);
+					header = parseLine(header, inputInfo.delimiter, false);
+					step3();
+				};
+				contentContainer.appendChild(nextButton);
+
+				document.getElementsByName(delimiterInputId).forEach(e => {
+					e.addEventListener('change', function () {
+						nextButton.classList.remove('disabled');
+					});
 				});
-			});
+			}
 		}
 		async function step3() {
-			await clearContentContainer();
-
-			var relevantFields = {
-				first: 'First name',
-				last: 'Last name',
-				address: 'Address',
-				zip: 'Zip'
-			};
-
-			var headerInputId = 'input-header';
-
-			var title = document.createElement('div');
-			title.className = 'content-container-title';
-			title.innerHTML = 'File Header';
-			contentContainer.appendChild(title);
-
-			contentContainer.appendChild(createSpacer());
-
-			var content = document.createElement('div');
-			content.innerHTML += 'What columns in your file correspond to what?  Identifying these allows us to add Versium SimpleTags to your output file.';
-			contentContainer.appendChild(content);
-
-			contentContainer.appendChild(createSpacer());
-
-			var twoColumnContainer = document.createElement('div');
-			Object.keys(relevantFields).forEach(k => {
-				var twoColumnLeft = document.createElement('div');
-				twoColumnLeft.className = 'two-column-left';
-				twoColumnLeft.innerHTML = relevantFields[k] + ':&nbsp;&nbsp;';
-				twoColumnContainer.appendChild(twoColumnLeft);
-				var twoColumnRight = document.createElement('div');
-				twoColumnRight.className = 'two-column-right';
-				var twoColumnRightInput = document.createElement('select');
-				twoColumnRightInput.id = headerInputId + '-' + k;
-				twoColumnRightInput.name = headerInputId;
-				var defaultOption = document.createElement('option');
-				defaultOption.innerHTML = 'None';
-				defaultOption.selected = true;
-				defaultOption.value = -1;
-				twoColumnRightInput.appendChild(defaultOption);
-				for (var i = 0; i < header.length; i++) {
-					var optionElement = document.createElement('option');
-					optionElement.innerHTML = header[i];
-					optionElement.value = i;
-					twoColumnRightInput.appendChild(optionElement);
-				}
-				twoColumnRight.appendChild(twoColumnRightInput);
-				twoColumnContainer.appendChild(twoColumnRight);
-				twoColumnContainer.appendChild(document.createElement('br'));
-			});
-			contentContainer.appendChild(twoColumnContainer);
-
-			contentContainer.appendChild(createSpacer());
-			contentContainer.appendChild(createSpacer());
-			contentContainer.appendChild(createSpacer());
 			
-			var nextButton = createNextButton();
-			//nextButton.classList.add('disabled');
-			nextButton.onclick = function() { 
-				if (this.classList.contains('disabled')) return;
-				Object.keys(relevantFields).forEach(k => {
-					inputInfo[k] = document.getElementById(headerInputId + '-' + k).value;
+			var fieldGuesses = {
+				first: { index: undefined, guesses: 0 },
+				last: { index: undefined, guesses: 0 },
+				address: { index: undefined, guesses: 0 },
+				zip: { index: undefined, guesses: 0 },
+			}
+			for (var i = 0; i < header.length; i++) {
+				var guesses = 0;
+				var guess = '';
+				if (header[i].match(/.*first.*/i)) {
+					guesses++;
+					guess = 'first';
+				}
+				if (header[i].match(/.*last.*/i)) {
+					guesses++;
+					guess = 'last';
+				}
+				if (header[i].match(/^(postal|mailing|mail|street|corp|owner)?\s?addr(ess)?$/i)) {
+					guesses++;
+					guess = 'address';
+				}
+				if (header[i].match(/.*(zip|postal\scode).*/i)) {
+					guesses++;
+					guess = 'zip';
+				}
+				if (guesses == 1) {
+					fieldGuesses[guess].index = i;
+					fieldGuesses[guess].guesses++;
+				}
+			}
+			Object.keys(fieldGuesses).forEach(k => {
+				if (fieldGuesses[k].guesses != 1) fieldGuesses[k] = false;
+			});
+			
+			if (!chooseOptions) {
+				Object.keys(fieldGuesses).forEach(k => {
+					if (fieldGuesses[k]) inputInfo[k] = fieldGuesses[k].index;
+					else inputInfo[k] = '-1';
 				});
-				step4();
-			};
-			contentContainer.appendChild(nextButton);
+				step5();
+			} else {
+				await clearContentContainer();
 
-			/*document.getElementsByName(headerInputId).forEach(e => {
-				e.addEventListener('change', function () {
-					var undisable = true;
-					var headerInputs = document.getElementsByName(headerInputId);
-					for (var i = 0; i < headerInputs.length; i++) {
-						if (headerInputs[i].value == 'unselected') undisable = false;
+				var relevantFields = {
+					first: 'First name',
+					last: 'Last name',
+					address: 'Address',
+					zip: 'Zip'
+				};
+
+				var headerInputId = 'input-header';
+
+				var title = document.createElement('div');
+				title.className = 'content-container-title';
+				title.innerHTML = 'File Header';
+				contentContainer.appendChild(title);
+
+				contentContainer.appendChild(createSpacer());
+
+				var content = document.createElement('div');
+				content.innerHTML += 'What columns in your file correspond to these field types?  Identifying these allows us to add Versium SimpleTags to your output file.';
+				contentContainer.appendChild(content);
+
+				contentContainer.appendChild(createSpacer());
+
+				var twoColumnContainer = document.createElement('div');
+				Object.keys(relevantFields).forEach(k => {
+					var twoColumnLeft = document.createElement('div');
+					twoColumnLeft.className = 'two-column-left';
+					twoColumnLeft.innerHTML = relevantFields[k] + ':&nbsp;&nbsp;';
+					twoColumnContainer.appendChild(twoColumnLeft);
+					var twoColumnRight = document.createElement('div');
+					twoColumnRight.className = 'two-column-right';
+					var twoColumnRightInput = document.createElement('select');
+					twoColumnRightInput.id = headerInputId + '-' + k;
+					twoColumnRightInput.name = headerInputId;
+					var defaultOption = document.createElement('option');
+					defaultOption.innerHTML = 'None';
+					defaultOption.selected = !fieldGuesses[k];
+					defaultOption.value = -1;
+					twoColumnRightInput.appendChild(defaultOption);
+					for (var i = 0; i < header.length; i++) {
+						var optionElement = document.createElement('option');
+						optionElement.innerHTML = header[i];
+						optionElement.value = i;
+						if (fieldGuesses[k] && fieldGuesses[k].index == i) optionElement.selected = true;
+						twoColumnRightInput.appendChild(optionElement);
 					}
-					if (undisable) nextButton.classList.remove('disabled');
+					twoColumnRight.appendChild(twoColumnRightInput);
+					twoColumnContainer.appendChild(twoColumnRight);
+					twoColumnContainer.appendChild(document.createElement('br'));
 				});
-			});*/
+				contentContainer.appendChild(twoColumnContainer);
+
+				contentContainer.appendChild(createSpacer());
+				contentContainer.appendChild(createSpacer());
+				contentContainer.appendChild(createSpacer());
+				
+				var nextButton = createNextButton();
+				nextButton.onclick = function() { 
+					if (this.classList.contains('disabled')) return;
+					Object.keys(relevantFields).forEach(k => {
+						inputInfo[k] = document.getElementById(headerInputId + '-' + k).value;
+					});
+					step4();
+				};
+				contentContainer.appendChild(nextButton);
+			}
 		}
 		async function step4() {
 			await clearContentContainer();
 			
 			var capitalizationInputId = 'input-capitalization';
 			var trimInputId = 'input-trim';
-			var alphanumericInputId = 'input-alphanumeric';
+			//var alphanumericInputId = 'input-alphanumeric';
 			var hashSaltInputId = 'input-hashsalt';
 			var tagFormatInputId = 'input-tagformat';
 			var tagLengthInputId = 'input-taglength';
@@ -811,44 +931,6 @@
 					trimDiv.appendChild(radioNoTrimLabel);
 					
 				optionsDiv.appendChild(trimDiv);
-				optionsDiv.appendChild(createSpacer());
-				optionsDiv.appendChild(createSpacer());
-				
-				//alphanumeric
-				var alphanumericDiv = document.createElement('div');
-				alphanumericDiv.innerHTML = 'Non-alphanumeric characters:';
-				alphanumericDiv.appendChild(document.createElement('br'));
-				
-					var radioAlphanumeric = document.createElement('input');
-					//radioAlphanumeric.checked = true;
-					radioAlphanumeric.disabled = true;
-					radioAlphanumeric.id = alphanumericInputId + '-only';
-					radioAlphanumeric.name = alphanumericInputId;
-					radioAlphanumeric.type = 'radio';
-					radioAlphanumeric.value = 1;
-					var radioAlphanumericLabel = document.createElement('label');
-					radioAlphanumericLabel.htmlFor = alphanumericInputId + '-only';
-					radioAlphanumericLabel.innerHTML = 'Remove non-alphanumeric characters';
-					alphanumericDiv.appendChild(radioAlphanumeric);
-					alphanumericDiv.appendChild(radioAlphanumericLabel);
-					
-					alphanumericDiv.appendChild(document.createElement('br'));
-				
-					var radioNonAlphanumeric = document.createElement('input');
-					radioNonAlphanumeric.checked = true;
-					radioNonAlphanumeric.id = alphanumericInputId + '-non';
-					radioNonAlphanumeric.name = alphanumericInputId;
-					radioNonAlphanumeric.type = 'radio';
-					radioNonAlphanumeric.value = 0;
-					var radioNonAlphanumericLabel = document.createElement('label');
-					radioNonAlphanumericLabel.htmlFor = alphanumericInputId + '-non';
-					radioNonAlphanumericLabel.innerHTML = 'Leave non-alphanumeric characters';
-					alphanumericDiv.appendChild(radioNonAlphanumeric);
-					alphanumericDiv.appendChild(radioNonAlphanumericLabel);
-					
-				optionsDiv.appendChild(alphanumericDiv);
-				optionsDiv.appendChild(createSpacer());
-				optionsDiv.appendChild(createSpacer());
 			
 			contentContainer.appendChild(optionsDiv);
 			contentContainer.appendChild(createSpacer());
@@ -1089,7 +1171,6 @@
 			nextButton.onclick = async function() {
 				outputInfo.capitalization = Number(getRadioButtonValue(capitalizationInputId));
 				outputInfo.trim = Number(getRadioButtonValue(trimInputId));
-				outputInfo.alphanumeric = Number(getRadioButtonValue(alphanumericInputId));
 				outputInfo.hashSalt = document.getElementById(hashSaltInputId).value;
 				outputInfo.tagFormat = Number(getRadioButtonValue(tagFormatInputId));
 				outputInfo.tagLength = Number(getRadioButtonValue(tagLengthInputId));
@@ -1132,7 +1213,7 @@
 					if (inputLines[i].trim() == '') continue;
 					if (outputInfo.capitalization == 1) inputLines[i] = inputLines[i].toLowerCase();
 					else if (outputInfo.capitalization == 2) inputLines[i] = inputLines[i].toUpperCase();
-					var parsedLine = parseLine(inputLines[i], delimiter, outputInfo.alphanumeric);
+					var parsedLine = parseLine(inputLines[i], delimiter);
 					if (parsedLine.length != header.length) {
 						output += 'Malformatted line\n';
 						errors++;
@@ -1144,7 +1225,6 @@
 						outputLine[j] = md5(outputInfo.hashSalt + outputLine[j]);
 					}
 					var appendedData = generateHashedSimpleTags(parsedLine[inputInfo.first], parsedLine[inputInfo.last], parsedLine[inputInfo.address], parsedLine[inputInfo.zip], outputInfo.tagFormat, outputInfo.tagLength, outputInfo.hashLength, outputInfo.hashEncoding);
-					//appendedData = addHashes(appendedData, outputInfo.hashLength, outputInfo.hashEncoding);
 					outputLine = outputLine.concat(appendedData);
 					output += outputLine.join(delimiter) + '\n';
 				}
@@ -1176,16 +1256,15 @@
 			contentContainer.appendChild(createSpacer());
 
 			var nextButton = createNextButton('Start Over');
-			//nextButton.classList.add('disabled');
 			nextButton.onclick = function() { 
 				if (this.classList.contains('disabled')) return;
-				step1();
+				step0();
 			};
 			contentContainer.appendChild(nextButton);
 		}
 
 		//helper functions
-		function appendToFilename(filename, string){
+		function appendToFilename(filename, string){ //add to the end of the filename before the extension
 			var dotIndex = filename.lastIndexOf(".");
 			if (dotIndex == -1) return filename + string;
 			else return filename.substring(0, dotIndex) + string + filename.substring(dotIndex);
@@ -1212,7 +1291,7 @@
 			spacer.className = 'spacer';
 			return spacer;
 		}
-		function download(filename, contents) {
+		function download(filename, contents) { //write and download filename
 			var e = document.createElement('a');
 			e.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
 			e.setAttribute('download', filename);
@@ -1221,17 +1300,17 @@
 			e.click();
 			document.body.removeChild(e);
 		}
-		function getFileHeader(delimiter) { //get column names and indexes
+		function getFileHeader() { //get first line of file
 			var reader = new FileReader();
 			reader.onload = function (progressEvent) {
-				header = parseLine(reader.result.split('\n').shift(), delimiter, false);
+				header = reader.result.split('\n').shift();
 			}
 			reader.readAsText(fileInput.files[0]);
 		}
 		function getRadioButtonValue(name) {
 			return document.querySelector('input[name="' + name + '"]:checked').value;
 		}
-		function parseLine(line, delimiter = ',', removeNonAlphanumerics = true) {
+		function parseLine(line, delimiter = ',') {
 			var insideQuote = false,
 				entries = [],
 				entry = [];
@@ -1244,7 +1323,6 @@
 						entries.push(entry.join(''));
 						entry = [];
 					} else {
-					//} else if (!removeNonAlphanumerics || /[a-zA-Z0-9 -]/.test(c)) {
 						entry.push(c);
 					}
 				}
@@ -1254,6 +1332,6 @@
 		}
 	</script>
 	<script>
-		step1(true);
+		step0(true);
 	</script>
 </body>
